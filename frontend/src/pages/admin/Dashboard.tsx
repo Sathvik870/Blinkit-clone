@@ -9,9 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
-import { Popover } from "@headlessui/react";
 import {
   HiUsers,
   HiShoppingBag,
@@ -20,10 +18,42 @@ import {
   HiOutlineClock,
   HiOutlineCheckCircle,
   HiOutlineCreditCard,
-  HiOutlineCalendar,
 } from "react-icons/hi";
 import api from "../../api";
-import { format, subDays, isAfter } from "date-fns";
+import { format, subDays } from "date-fns";
+import { CustomDatePicker } from '../../components/common/CustomDatePicker';
+
+interface DashboardStats {
+  totalRevenue: number;
+  monthlyRevenue: number;
+  totalOrders: number;
+  pendingOrders: number;
+  totalCustomers: number;
+  totalProducts: number;
+  completedOrders: number;
+  pendingPayments: number;
+  dailyProfit: DailyProfit[];
+  weeklyOrders: WeeklyOrder[];
+}
+
+interface DailyProfit {
+  day: string;
+  profit: string;
+  revenue: string;
+  cost: string;
+}
+
+interface WeeklyOrder {
+  day_name: string;
+  orders: number;
+}
+
+interface FormattedProfitData {
+  day: string;
+  profit: number;
+  revenue: number;
+  cost: number;
+}
 
 const StatCard = ({
   title,
@@ -46,30 +76,22 @@ const StatCard = ({
 );
 
 const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [dateRange, setDateRange] = useState({
-    from: subDays(new Date(), 29),
-    to: new Date(),
-  });
+  const [fromDate, setFromDate] = useState<Date | null>(subDays(new Date(), 29));
+  const [toDate, setToDate] = useState<Date | null>(new Date());
 
-  const handleDateChange = (range: { from?: Date; to?: Date }) => {
-    let { from, to } = range;
-    if (from && isAfter(from, new Date())) from = new Date();
-    if (to && isAfter(to, new Date())) to = new Date();
-    if (from && to && isAfter(from, to)) from = to;
-
-    setDateRange({ from: from || dateRange.from, to: to || dateRange.to });
-  };
 
   const fetchStats = useCallback(async () => {
+    if (!fromDate || !toDate) return;
+
     setLoading(true);
     try {
       const { data } = await api.get("/api/admin/dashboard/stats", {
         params: {
-          startDate: dateRange.from,
-          endDate: dateRange.to,
+          startDate: fromDate,
+          endDate: toDate,
         },
       });
       setStats(data);
@@ -78,7 +100,7 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [fromDate, toDate]);
 
   useEffect(() => {
     fetchStats();
@@ -88,7 +110,7 @@ const Dashboard: React.FC = () => {
     return <div className="p-8 text-center">Loading Dashboard...</div>;
   }
 
-  const formattedProfitData = stats.dailyProfit.map((day: any) => ({
+  const formattedProfitData: FormattedProfitData[] = stats.dailyProfit.map((day: DailyProfit) => ({
     ...day,
     day: format(new Date(day.day), "MMM d"),
     profit: parseFloat(day.profit),
@@ -99,49 +121,49 @@ const Dashboard: React.FC = () => {
   const statCards = [
     {
       title: "Total Revenue",
-      value: `₹${parseFloat(stats.totalRevenue || 0).toLocaleString()}`,
+      value: `₹${(stats.totalRevenue || 0).toLocaleString()}`,
       icon: <HiCash size={28} />,
       color: "bg-green-500",
     },
     {
       title: "Revenue This Month",
-      value: `₹${parseFloat(stats.monthlyRevenue || 0).toLocaleString()}`,
+      value: `₹${(stats.monthlyRevenue || 0).toLocaleString()}`,
       icon: <HiCash size={28} />,
       color: "bg-blue-500",
     },
     {
       title: "Total Orders",
-      value: stats.totalOrders,
+      value: (stats.totalOrders ?? 0).toString(),
       icon: <HiShoppingCart size={28} />,
       color: "bg-indigo-500",
     },
     {
       title: "Pending Orders",
-      value: stats.pendingOrders,
+      value: (stats.pendingOrders ?? 0).toString(),
       icon: <HiOutlineClock size={28} />,
       color: "bg-yellow-500",
     },
     {
       title: "Total Customers",
-      value: stats.totalCustomers,
+      value: (stats.totalCustomers ?? 0).toString(),
       icon: <HiUsers size={28} />,
       color: "bg-purple-500",
     },
     {
       title: "Total Products",
-      value: stats.totalProducts,
+      value: (stats.totalProducts ?? 0).toString(),
       icon: <HiShoppingBag size={28} />,
       color: "bg-pink-500",
     },
     {
       title: "Completed Orders",
-      value: stats.completedOrders,
+      value: (stats.completedOrders ?? 0).toString(),
       icon: <HiOutlineCheckCircle size={28} />,
       color: "bg-teal-500",
     },
     {
       title: "Pending Payments",
-      value: stats.pendingPayments,
+      value: (stats.pendingPayments ?? 0).toString(),
       icon: <HiOutlineCreditCard size={28} />,
       color: "bg-red-500",
     },
@@ -160,54 +182,21 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 bg-[#f7f7f7] p-6 rounded-xl shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">Daily Profit</h2>
-            <div className="flex items-center gap-2 text-sm">
-              <Popover className="relative">
-                <Popover.Button className="p-2 border border-gray-300 rounded-md flex items-center gap-2 text-gray-700 hover:bg-gray-50">
-                  <HiOutlineCalendar /> {format(dateRange.from, "PP")}
-                </Popover.Button>
-                <Popover.Panel className="absolute z-10 bg-[#f7f7f7]  rounded-lg shadow-lg mt-2 p-4">
-                  <DayPicker
-                    mode="single"
-                    selected={dateRange.from}
-                    onSelect={(day) => handleDateChange({ from: day })}
-                    disabled={{ after: new Date() }}
-                    classNames={{
-                      caption_label: 'text-lg font-bold',
-                      nav_button: 'h-8 w-8 p-1 rounded-full hover:bg-gray-100',
-                      head_cell: 'text-xs text-gray-500 uppercase font-semibold w-9',
-                      cell: 'h-9 w-9 p-0',
-                      day: 'h-full w-full rounded-full hover:bg-gray-100',
-                      day_selected: 'bg-blue-600 text-white font-bold hover:bg-blue-700',
-                      day_today: 'font-bold text-blue-600',
-                      day_disabled: 'text-gray-300 opacity-50',
-                    }}
-                  />
-                </Popover.Panel>
-              </Popover>
-              <span>to</span>
-              <Popover className="relative">
-                <Popover.Button className="p-2 border border-gray-300 rounded-md flex items-center gap-2 text-gray-700 hover:bg-gray-50">
-                  <HiOutlineCalendar /> {format(dateRange.to, "PP")}
-                </Popover.Button>
-                <Popover.Panel className="absolute z-10 right-0 bg-[#f7f7f7]  rounded-lg shadow-lg mt-2 p-4">
-                  <DayPicker
-                    mode="single"
-                    selected={dateRange.to}
-                    onSelect={(day) => handleDateChange({ to: day })}
-                    disabled={{ after: new Date(), before: dateRange.from }}
-                    classNames={{
-                      caption_label: 'text-lg font-bold',
-                      nav_button: 'h-8 w-8 p-1 rounded-full hover:bg-gray-100',
-                      head_cell: 'text-xs text-gray-500 uppercase font-semibold w-9',
-                      cell: 'h-9 w-9 p-0',
-                      day: 'h-full w-full rounded-full hover:bg-gray-100',
-                      day_selected: 'bg-blue-600 text-white font-bold hover:bg-blue-700',
-                      day_today: 'font-bold text-blue-600',
-                      day_disabled: 'text-gray-300 opacity-50',
-                    }}
-                  />
-                </Popover.Panel>
-              </Popover>
+            <div className="flex items-center gap-2 text-sm flex-wrap">
+              <CustomDatePicker
+                value={fromDate}
+                onChange={(date) => setFromDate(date)}
+                maxDate={new Date()}
+                placeholder="Start Date"
+              />
+              <span className="text-gray-500 font-semibold">to</span>
+              <CustomDatePicker
+                value={toDate}
+                onChange={(date) => setToDate(date)}
+                maxDate={new Date()}
+                minDate={fromDate || undefined}
+                placeholder="End Date"
+              />
             </div>
           </div>
           <div className="max-h-[400px] overflow-y-auto">
@@ -222,12 +211,11 @@ const Dashboard: React.FC = () => {
               </thead>
               <tbody className="divide-y">
                 {formattedProfitData.length > 0 ? (
-                  formattedProfitData.map((row: any, index: number) => (
+                  formattedProfitData.map((row: FormattedProfitData, index: number) => (
                     <tr
                       key={row.day}
-                      className={`text-sm ${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      }`}
+                      className={`text-sm ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                        }`}
                     >
                       <td className="py-3 px-4 font-medium text-gray-700">
                         {row.day}
@@ -239,9 +227,8 @@ const Dashboard: React.FC = () => {
                         ₹{row.cost.toFixed(2)}
                       </td>
                       <td
-                        className={`py-3 px-4 text-right font-bold ${
-                          row.profit >= 0 ? "text-green-700" : "text-red-700"
-                        }`}
+                        className={`py-3 px-4 text-right font-bold ${row.profit >= 0 ? "text-green-700" : "text-red-700"
+                          }`}
                       >
                         {row.profit >= 0
                           ? `₹${row.profit.toFixed(2)}`

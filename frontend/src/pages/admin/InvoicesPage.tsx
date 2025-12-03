@@ -5,12 +5,14 @@ import api from "../../api";
 import { useAlert } from "../../context/common/AlertContext";
 import { format } from "date-fns";
 import PaymentModal from "../../components/admin/PaymentModal";
+import { useAdminAuth } from "../../context/admin/auth/useAdminAuth";
 
 interface Invoice {
   invoice_id: number;
   invoice_code: string;
   customer_name: string;
   customer_code: string;
+  phone_number: number;
   total_amount: number;
   amount_paid: number;
   invoice_status: "Upcoming" | "Overdue" | "Paid" | "Partially Paid";
@@ -46,6 +48,8 @@ const InvoicesPage: React.FC = () => {
   const { showAlert } = useAlert();
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const { admin } = useAdminAuth();
+  const isAdminSuper = admin?.role === 'superadmin';
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -93,8 +97,8 @@ const InvoicesPage: React.FC = () => {
     []
   );
 
-  const columnDefs = useMemo<ColDef<Invoice>[]>(
-    () => [
+  const columnDefs = useMemo<ColDef<Invoice>[]>(() => {
+    const baseCols: ColDef<Invoice>[] = [
       {
         field: "invoice_code",
         headerName: "Invoice Code",
@@ -106,8 +110,8 @@ const InvoicesPage: React.FC = () => {
         flex: 1,
       },
       {
-        field: "customer_code",
-        headerName: "Customer Code",
+        field: "phone_number",
+        headerName: "Phone Number",
         flex: 1,
       },
       {
@@ -156,10 +160,10 @@ const InvoicesPage: React.FC = () => {
             status === "Paid"
               ? "bg-green-100 text-green-800"
               : status === "Overdue"
-              ? "bg-red-100 text-red-800"
-              : status === "Partially Paid"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-yellow-100 text-yellow-800";
+                ? "bg-red-100 text-red-800"
+                : status === "Partially Paid"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-yellow-100 text-yellow-800";
           return (
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${colorClasses}`}
@@ -175,15 +179,22 @@ const InvoicesPage: React.FC = () => {
         valueFormatter: (p) => format(new Date(p.value), "PP"),
         flex: 1,
       },
-      {
-        headerName: "Actions",
-        cellRenderer: ActionsCellRenderer,
-        flex: 1,
-        filter: false,
-        sortable: false,
-      },
-    ],
-    []
+    ];
+    if (isAdminSuper) {
+      return [
+        ...baseCols,
+        {
+          headerName: "Actions",
+          cellRenderer: ActionsCellRenderer,
+          flex: 1,
+          filter: false,
+          sortable: false,
+        },
+      ];
+    }
+    return baseCols;
+  },
+    [isAdminSuper]
   );
 
   return (
@@ -202,7 +213,7 @@ const InvoicesPage: React.FC = () => {
           defaultColDef={defaultColDef}
           pagination={true}
           paginationPageSize={500}
-          paginationPageSizeSelector={[500,1000,1500]}
+          paginationPageSizeSelector={[500, 1000, 1500]}
         />
       </div>
 

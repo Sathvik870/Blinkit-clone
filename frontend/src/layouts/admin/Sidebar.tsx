@@ -10,6 +10,7 @@ import {
   HiOutlineShoppingBag,
   HiOutlineDocumentText,
   HiOutlineTruck,
+  HiOutlineChartPie,
 } from "react-icons/hi";
 import { useNotification } from "../../context/admin/Notification/useNotification.ts";
 
@@ -42,6 +43,11 @@ const mainLinks = [
     name: "Invoices",
     path: "/admin/invoices",
     icon: HiOutlineDocumentText,
+  },
+  {
+    name: "Daily Totals",
+    path: "/admin/daily-totals",
+    icon: HiOutlineChartPie,
   },
 ];
 

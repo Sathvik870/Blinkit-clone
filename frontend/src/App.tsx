@@ -20,6 +20,7 @@ import PurchaseOrdersPage from "./pages/admin/PurchaseOrdersPage";
 import SalesOrdersPage from "./pages/admin/SalesOrdersPage";
 import InvoicesPage from "./pages/admin/InvoicesPage";
 import SettingsPage from "./pages/admin/SettingsPage";
+import DailyTotalsPage from './pages/admin/DailyTotalsPage';
 
 import LoginPage from "./pages/customer/CustomerLoginPage";
 import SignupPage from "./pages/customer/CustomerSignupPage";
@@ -95,6 +96,10 @@ function App() {
                               <Route
                                 path="/admin/settings"
                                 element={<SettingsPage />}
+                              />
+                              <Route
+                                path="/admin/daily-totals"
+                                element={<DailyTotalsPage />}
                               />
                             </Route>
                           </Route>

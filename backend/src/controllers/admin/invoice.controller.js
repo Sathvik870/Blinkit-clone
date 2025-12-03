@@ -14,7 +14,7 @@ exports.getAllInvoices = async (req, res) => {
         i.amount_paid,
         i.invoice_status,
         so.payment_method,
-        c.customer_code,
+        c.phone_number,
         CONCAT(c.first_name, ' ', c.last_name) as customer_name
       FROM invoices i
       JOIN customers c ON i.customer_id = c.customer_id
