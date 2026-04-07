@@ -1,55 +1,39 @@
 const { Pool } = require("pg");
-// require("dotenv").config();
-// const fs = require("fs");
-// const path = require("path");
 const logger = require("./logger");
-// const caCertPath = path.resolve(__dirname, "../../", "certs", "ca.pem");
 
-// logger.info("[DB] Attempting to read Aiven CA certificate from the root path");
+let pool = null;
 
-// let caCertContent;
-// try {
-//   caCertContent = fs.readFileSync(caCertPath).toString();
-//   logger.info("[DB] Successfully read CA certificate file.");
-// } catch (error) {
-//   logger.error(
-//     "[DB] !!! CRITICAL ERROR: FAILED TO READ ca.pem CERTIFICATE FILE !!!"
-//   );
-//   logger.error("[DB] Reason: ${error.message}");
-//   process.exit(1);
-// }
+function getPool() {
+  if (!pool) {
+    if (process.env.NODE_ENV === "test") {
+      logger.info("[DB] Skipping DB connection in test mode");
+      return null;
+    }
 
-// const sslConfig = {
-//   rejectUnauthorized: true,
-//   ca: caCertContent,
-// };
+    pool = new Pool({
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_DATABASE,
+      password: process.env.DB_PASSWORD,
+      port: process.env.DB_PORT,
+      ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+    });
 
-// logger.info(
-//   "[DB] Attempting to create database pool with Cloud system configuration"
-// );
+    logger.info("[DB] Database pool initialized");
+  }
 
-// const pool = new Pool({
-//   user: process.env.DB_USER,
-//   host: process.env.DB_HOST,
-//   database: process.env.DB_DATABASE,
-//   password: process.env.DB_PASSWORD,
-//   port: process.env.DB_PORT,
-//   ssl: sslConfig,
-// });
+  return pool;
+}
 
-const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "farmerlogistics",
-  password: "sathvik2004",
-  port: 5432,
-  ssl: false,
-});
-
-logger.info("[DB] Database pool created with SSL configuration");
+async function query(text, params) {
+  const p = getPool();
+  if (!p) {
+    throw new Error("DB not available in test mode");
+  }
+  return p.query(text, params);
+}
 
 module.exports = {
-  query: (text, params) => pool.query(text, params),
-  connect: () => pool.connect(),
-  pool: pool,
+  getPool,
+  query,
 };

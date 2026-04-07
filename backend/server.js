@@ -1,6 +1,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({
+  path: process.env.NODE_ENV === "test" ? ".env.test" : ".env",
+});
 const cors = require("cors");
 const os = require("os");
 const cookieParser = require("cookie-parser");
@@ -26,7 +28,9 @@ const customerPushRoutes = require("./src/routes/customer/push.routes");
 
 const publicProductRoutes = require("./src/routes/public/product.routes");
 
-require('./src/jobs/updateInvoiceStatus.js');
+if (process.env.NODE_ENV !== "test") {
+  require('./src/jobs/updateInvoiceStatus.js');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -128,11 +132,15 @@ app.get("/", (req, res) => {
   res.send("Hello there! Welcome to the Farmer Logistics Backend Server.");
 });
 
-server.listen(PORT, HOST, () => {
-  const localIp = findLocalIp();
-  logger.info("Server running and accessible on:");
-  logger.info(`  - Local:   http://localhost:${PORT}`);
-  if (localIp) {
-    logger.info(`  - Network: http://${localIp}:${PORT}`);
-  }
-});
+module.exports = { app, server };
+
+if (require.main === module) {
+  server.listen(PORT, HOST, () => {
+    const localIp = findLocalIp();
+    logger.info("Server running and accessible on:");
+    logger.info(`  - Local:   http://localhost:${PORT}`);
+    if (localIp) {
+      logger.info(`  - Network: http://${localIp}:${PORT}`);
+    }
+  });
+}
