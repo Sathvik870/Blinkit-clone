@@ -1,12 +1,13 @@
 const webpush = require("web-push");
 const db = require("../../config/db");
 const logger = require("../../config/logger");
-
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+if (process.env.NODE_ENV !== "test") {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 
 exports.subscribeCustomer = async (subscription, customerId) => {
   try {
