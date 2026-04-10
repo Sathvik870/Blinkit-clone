@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blinkit-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blinkit
+  template:
+    metadata:
+      labels:
+        app: blinkit
+    spec:
+      containers:
+      - name: backend
+        image: sathvikayyasamy/blinkit-backend:latest
+        ports:
+        - containerPort: 3000

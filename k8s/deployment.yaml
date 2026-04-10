@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blinkit-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blinkit-backend
+  template:
+    metadata:
+      labels:
+        app: blinkit-backend
+    spec:
+      containers:
+      - name: blinkit-backend
+        image: sathvikayyasamy/blinkit-backend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+
+        - name: VAPID_PUBLIC_KEY
+          value: "BJHrHF2bN6cJ1tckYUuuqmXHkaIXd3XEszRKeIFVa1hOU5tA7d5Xns1oVCmlWReDkguP28ovvsqWBth546QmENQ"
+
+        - name: VAPID_PRIVATE_KEY
+          value: "eH9dM4rCMq0tSJZ5eINftndIkTaLcDdIhgWrEE9YNGw"
+
+        - name: VAPID_SUBJECT
+          value: "mailto:sathvikayyasamyworks@gmail.com"
