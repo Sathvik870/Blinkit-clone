@@ -3,6 +3,10 @@
 *.tfstate
 *.tfstate.backup
 
+# Large binaries
+*.zip
+minikube-linux-amd64
+awscliv2.zip
 
 
 # Logs
