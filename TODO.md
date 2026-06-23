@@ -1,4 +1,0 @@
-- [ ] Remove DatePicker import from Dashboard.tsx
-- [ ] Add state for showing calendar
-- [ ] Replace DatePicker components with a button and conditional Calendar in range mode
-- [ ] Update onSelect handler to set dateRange
