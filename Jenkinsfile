@@ -3,9 +3,9 @@ pipeline {
 
     stages {
 
-        stage('Clone Successful') {
+        stage('Checkout') {
             steps {
-                echo 'Repository cloned successfully!'
+                echo 'Repository cloned successfully'
             }
         }
 
@@ -14,6 +14,23 @@ pipeline {
                 dir('backend') {
                     sh 'pwd'
                     sh 'ls -la'
+                }
+            }
+        }
+
+        stage('Node Version') {
+            steps {
+                dir('backend') {
+                    sh 'node -v'
+                    sh 'npm -v'
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('backend') {
+                    sh 'npm install'
                 }
             }
         }
