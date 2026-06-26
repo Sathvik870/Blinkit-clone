@@ -30,6 +30,7 @@ pipeline {
 	}
 	
 	stage('Build docker image'){
+	    agent any
 	    steps {
 		dir('backend'){
 		    sh 'docker build -t blinkit-backend-app:latest .'
