@@ -1,19 +1,23 @@
 pipeline {
-    agent {
-	docker {
-	    image 'node:24-alpine'
-	}
-    } 
+    agent any
 
     stages {
 
         stage('Checkout') {
-            steps {
+            agent any
+	    steps {
                 echo 'Repository cloned successfully'
             }
         }
 
         stage('Install Dependencies') {
+	    agent {
+		docker {
+		    image 'node:24-alpine'
+                    reuseNode true
+		}
+            }
+
             steps {
                 dir('backend') {
                     sh 'npm install'
@@ -22,6 +26,12 @@ pipeline {
         }
 	
 	stage('Run test') {
+	    agent {
+		docker {
+		    image 'node:24-alpine'
+                    reuseNode true
+		}
+	    }
 	    steps {
 		dir('backend'){
 		    sh 'npm run test'
@@ -40,3 +50,4 @@ pipeline {
 		
     }
 }
+
