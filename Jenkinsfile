@@ -13,24 +13,6 @@ pipeline {
             }
         }
 
-        stage('Backend Files') {
-            steps {
-                dir('backend') {
-                    sh 'pwd'
-                    sh 'ls -la'
-                }
-            }
-        }
-
-        stage('Node Version') {
-            steps {
-                dir('backend') {
-                    sh 'node -v'
-                    sh 'npm -v'
-                }
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 dir('backend') {
@@ -38,5 +20,22 @@ pipeline {
                 }
             }
         }
+	
+	stage('Run test') {
+	    steps {
+		dir('backend'){
+		    sh 'npm run test'
+		}
+	    }
+	}
+	
+	stage('Build docker image'){
+	    steps {
+		dir('backend'){
+		    sh 'docker build -t blinkit-backend-app:latest .'
+	        }
+  	    }
+	}
+		
     }
 }
