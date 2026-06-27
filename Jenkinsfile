@@ -51,7 +51,7 @@ pipeline {
                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest
                     '''
 	        }
-  	    }
+	    }
 	}
 	stage('Push Docker Image') {
              agent any
@@ -73,6 +73,24 @@ pipeline {
                }
             }
         }
+	stage('Deploy') {
+              agent any
+              steps {
+                sh '''
+                   docker pull ${IMAGE_NAME}:latest
+
+                   docker stop blinkit-backend-app || true
+                   docker rm blinkit-backend-app || true
+
+                   docker run -d \
+                     --name blinkit-backend-app \
+                     --env-file ${WORKSPACE}/backend/.env \
+                     -p 5000:5000 \
+                     ${IMAGE_NAME}:latest
+           
+                   echo "Deployment Successful!"
+		 '''
+             }
+        }
     }
 }
-
