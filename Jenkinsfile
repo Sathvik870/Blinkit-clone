@@ -79,16 +79,18 @@ pipeline {
 		withCredentials([file(credentialsId: 'backend-env', variable: 'ENV_FILE')]){
 
                    sh '''
-                      docker pull ${IMAGE_NAME}:latest
+                      docker pull ${IMAGE_NAME}:${IMAGE_TAG}
  
                       docker stop blinkit-backend-app || true
+
                       docker rm blinkit-backend-app || true
 
                       docker run -d \
                        --name blinkit-backend-app \
-                       --env-file ${WORKSPACE}/backend/.env \
+		       --restart unless-stopped \
+                       --env-file "$ENV_FILE" \
                        -p 5000:5000 \
-                       ${IMAGE_NAME}:latest
+                       ${IMAGE_NAME}:${IMAGE_TAG}
            
                        echo "Deployment Successful!"
 		   '''
